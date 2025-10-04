@@ -1,17 +1,50 @@
-from fastapi import APIRouter, UploadFile, HTTPException
+from fastapi import APIRouter, UploadFile, HTTPException, status
 from fastapi.responses import FileResponse
-from app.utils.file_ops import save_uploaded_file
-from app.utils.metadata import read_metadata
-from app.config import UPLOAD_DIR
+from app.utils.metadata import read_metadata, write_metadata
+from app.config import UPLOAD_DIR, MAX_FILE_SIZE, DANGEROUS_EXTENSIONS
 import os
 import uuid
+from datetime import datetime
 
 router = APIRouter(prefix="/files", tags=["Files"])
 
 # Upload a file
-@router.post("/", status_code=201)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 async def upload_file(file: UploadFile):
-    return await save_uploaded_file(file)
+    if file.size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File exceeds {MAX_FILE_SIZE} MB limit."
+        )
+
+    # Generate unique file ID
+    file_id = str(uuid.uuid4())
+    _, ext = os.path.splitext(file.filename)
+    filename = f"{file_id}{ext}"
+    path = os.path.join(UPLOAD_DIR, filename)
+
+    # Check for dangerous file types
+    if ext in DANGEROUS_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"File type '{ext}' is not allowed for security reasons."
+        )
+
+    # save file
+    with open(path, "wb") as f:
+        f.write(await file.read())
+
+    # Update metadata
+    metadata = read_metadata()
+    metadata.append({
+        "file_id": file_id,
+        "filename": file.filename,
+        "upload_timestamp": datetime.now().isoformat(),
+        "size_in_bytes": file.size
+    })
+    write_metadata(metadata)
+
+    return {"file_id": file_id, "detail": "File uploaded successfully!"}
 
 # List all files
 @router.get("/")
