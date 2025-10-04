@@ -5,7 +5,8 @@ import uuid
 import json
 from datetime import datetime
 
-app = FastAPI(title="ClassDrop API",
+app = FastAPI(debug=True, 
+              title="ClassDrop API",
               description="API for Class File Sharing.")
 
 MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB
@@ -36,9 +37,12 @@ async def upload_file(file: UploadFile):
     if file.size > MAX_FILE_SIZE:  # 20 MB limit
         raise HTTPException(status_code=status.HTTP_413_CONTENT_TOO_LARGE,
                             detail="File size exceeds 20 MB limit.")
-     
-    unique_filename = f"{uuid.uuid4().hex}_{file.filename}" 
-    file_location = os.path.join(UPLOAD_DIR, file.filename)
+    
+    # Generate unique filename to avoid collisions
+    _, ext = os.path.splitext(file.filename)
+    file_id = uuid.uuid4().hex
+    unique_filename = f"{file_id}.{ext}" 
+    file_location = os.path.join(UPLOAD_DIR, unique_filename)
     
     # Save file on disk
     with open(file_location, "wb") as f:
@@ -47,14 +51,14 @@ async def upload_file(file: UploadFile):
     # Save metadata
     metadata = read_metadata()
     metadata.append({
-        "original_filename": file.filename,
-        "stored_as": file.filename,
-        "upload_time": datetime.now().isoformat(),
-        "size": file.size
+        "file_id": file_id,
+        "filename": unique_filename,
+        "upload_timestamp": datetime.now().isoformat(),
+        "size_in_bytes": file.size
     })
     write_metadata(metadata)
 
-    return {"filename": file.filename, "stored_as": unique_filename, "message": "File uploaded successfully!"}
+    return {"file_id": file_id, "message": "File uploaded successfully!"}
 
 # TODO: Implement file download logic
 # @app.get("/files/{id}")
