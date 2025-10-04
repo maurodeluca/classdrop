@@ -12,15 +12,15 @@
         <input name="file" type="file" required>
         <input type="submit" value="Upload">
     </form>
-    <p id="detail"></p>
+    <p id="message"></p>
 
     <script>
     document.getElementById("uploadForm").addEventListener("submit", async (e) => {
         e.preventDefault();
         
         // Clear previous messages
-        const detail = document.getElementById("detail");
-        detail.innerText = "";
+        const message = document.getElementById("message");
+        message.innerText = "";
 
         const form = e.target;
         const data = new FormData(form);
@@ -32,12 +32,12 @@
         const json = await res.json();
 
         if (res.ok) {
-            document.getElementById("detail").style.color = "green";
-            document.getElementById("detail").innerText = "INFO: " + json.detail;
+            document.getElementById("message").style.color = "green";
+            document.getElementById("message").innerText = "INFO: " + json.message;
         }
         else {
-            document.getElementById("detail").style.color = "red";
-            document.getElementById("detail").innerText = "ERROR: " + json.detail;
+            document.getElementById("message").style.color = "red";
+            document.getElementById("message").innerText = "ERROR: " + json.detail;
         }
     });
     </script>

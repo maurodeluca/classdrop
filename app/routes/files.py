@@ -16,7 +16,7 @@ async def upload_file(file: UploadFile):
     if file.size > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"File exceeds {MAX_FILE_SIZE} MB limit."
+            detail=f"File exceeds {MAX_FILE_SIZE // (1024 * 1024)} MB limit."
         )
 
     # Generate unique file ID
@@ -45,7 +45,7 @@ async def upload_file(file: UploadFile):
     }
     update_metadata(metadata_entry)
 
-    return {"file_id": file_id, "detail": "File uploaded successfully!"}
+    return {"file_id": file_id, "message": "File uploaded successfully!"}
 
 # List all files
 @router.get("/")

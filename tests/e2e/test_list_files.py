@@ -28,7 +28,6 @@ def test_list_files_success(tmp_path, monkeypatch):
 
     # Act
     response = client.get(f"/files/")
-    breakpoint()
 
     # Assert
     assert response.status_code == 200
