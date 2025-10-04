@@ -6,6 +6,9 @@ from filelock import FileLock, Timeout
 from functools import wraps
 from fastapi import UploadFile, HTTPException, status
 
+## TODO: Implement and use this service in the routes
+# THIS FILE iS A WORK IN PROGRESS AND NOT YET IN USED
+
 class FileService:
     def __init__(self, upload_dir="uploads", metadata_file="metadata.json", max_size_mb=20):
         self.upload_dir = upload_dir
