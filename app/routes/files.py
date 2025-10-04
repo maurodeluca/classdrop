@@ -2,7 +2,6 @@ from fastapi import APIRouter, UploadFile, HTTPException, status
 from fastapi.responses import FileResponse
 from app.utils.metadata import read_metadata, update_metadata
 from app.config import UPLOAD_DIR, MAX_FILE_SIZE, DANGEROUS_EXTENSIONS
-from app.models import FileMetadata
 import os
 import uuid
 from datetime import datetime
@@ -38,24 +37,22 @@ async def upload_file(file: UploadFile):
         f.write(await file.read())
 
     # Update metadata
-    metadata_entry = FileMetadata(
-        file_id=file_id,
-        filename=file.filename,
-        upload_timestamp=datetime.now().isoformat(),
-        size_in_bytes=file.size
-    )
+    metadata_entry = {
+        "file_id": file_id,
+        "filename": file.filename,
+        "upload_timestamp": datetime.now().isoformat(),
+        "size_in_bytes": file.size
+    }
     update_metadata(metadata_entry)
 
     return {"file_id": file_id, "detail": "File uploaded successfully!"}
 
 # List all files
-@router.get("/", response_model=list[FileMetadata])
+@router.get("/")
 async def list_files():
     """List all uploaded files with metadata."""
 
-    raw_metadata = read_metadata()
-    files = [FileMetadata(**item) for item in raw_metadata]
-    return {"files": files}
+    return {"files": read_metadata()}
 
 # Download a file by file_id
 @router.get("/{file_id}")
@@ -65,7 +62,7 @@ async def download_file(file_id: uuid.UUID):
     metadata = read_metadata()
 
     # Check if file_id exists in metadata
-    entry = next((m for m in metadata if m.file_id == file_id), None)
+    entry = next((m for m in metadata if m["file_id"] == str(file_id)), None)
     if not entry:
         raise HTTPException(status_code=404, detail="File not found in metadata")
 

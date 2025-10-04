@@ -2,7 +2,6 @@ import json
 from filelock import FileLock, Timeout
 from fastapi import HTTPException, status
 from functools import wraps
-from app.models import FileMetadata
 from app.config import METADATA_FILE
 
 def handle_file_errors(func):
@@ -33,25 +32,22 @@ def handle_file_errors(func):
     return wrapper
 
 @handle_file_errors
-def read_metadata() -> list[FileMetadata]:
+def read_metadata() -> list:
     """Read metadata from the JSON file with file locking."""
 
     with FileLock(f"{METADATA_FILE}.lock", timeout=5):
         with open(METADATA_FILE, "r") as f:
-            raw = json.load(f)
-    return [FileMetadata(**item) for item in raw]
+            return json.load(f)
 
 @handle_file_errors
-def write_metadata(metadata: list[FileMetadata]):
+def write_metadata(metadata: list):
     """Write metadata to the JSON file with file locking."""
-
-    d = [json.loads(m.model_dump_json()) for m in metadata]
 
     with FileLock(f"{METADATA_FILE}.lock", timeout=5):
         with open(METADATA_FILE, "w") as f:         
-            json.dump(d, f, indent=4)
+            json.dump(metadata, f, indent=4)
 
-def update_metadata(new_entry: FileMetadata):
+def update_metadata(new_entry: dict):
     """Add a new entry to the metadata file."""
 
     metadata = read_metadata()
