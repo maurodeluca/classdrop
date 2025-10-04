@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, status, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse
+from filelock import FileLock
 import os
 import uuid
 import json
@@ -11,7 +12,8 @@ app = FastAPI(debug=True,
 
 MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB
 UPLOAD_DIR = "uploads"
-METADATA_FILE = os.path.join(UPLOAD_DIR, "metadata.json")
+METADATA_FILE = "metadata.json"
+LOCK_FILE = "metadata.json.lock"
 
 # Ensure upload directory exists
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -23,13 +25,15 @@ if not os.path.exists(METADATA_FILE):
 
 # Helper to read metadata
 def read_metadata():
-    with open(METADATA_FILE, "r") as f:
-        return json.load(f)
+    with FileLock(LOCK_FILE, timeout=5):
+        with open(METADATA_FILE, "r") as f:
+            return json.load(f)
 
 # Helper to write metadata
 def write_metadata(data):
-    with open(METADATA_FILE, "w") as f:
-        json.dump(data, f, indent=4)
+    with FileLock(LOCK_FILE, timeout=5):
+        with open(METADATA_FILE, "w") as f:
+            json.dump(data, f, indent=4)
 
 # Upload endpoint
 @app.post("/files/", status_code=status.HTTP_201_CREATED)
