@@ -17,7 +17,7 @@ pip install -r requirements.txt
 
 
 ### 1️⃣ Clone the Repository
-```bash
+```console
 git clone https://github.com/maurodeluca/classdrop.git
 cd classdrop
 ```
@@ -26,7 +26,7 @@ cd classdrop
 
 It's recommend to use a virtual environmnet to keep dependencies isolated.
 
-```bash
+```console
 python -m venv venv
 ```
 
