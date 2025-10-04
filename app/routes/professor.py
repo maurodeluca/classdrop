@@ -9,6 +9,8 @@ templates = Jinja2Templates(directory="app/templates")
 # Render professor upload page
 @router.get("/", response_class=HTMLResponse)
 async def professor_page(request: Request):
+    """Render the professor upload page with max file size info."""
+    
     return templates.TemplateResponse(
         "upload_form.html",
         {

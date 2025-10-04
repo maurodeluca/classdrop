@@ -16,5 +16,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 # Redirect root to /student
 @app.get("/")
 async def root():
+    """Redirect root to /student page."""
+    
     return RedirectResponse(url="/student")
 

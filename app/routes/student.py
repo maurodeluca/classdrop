@@ -9,6 +9,8 @@ templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
 async def student_page(request: Request):
+    """Render the student page with list of uploaded files."""
+    
     files = read_metadata()
     
     # Format timestamps for display

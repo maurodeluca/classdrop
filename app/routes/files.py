@@ -8,9 +8,10 @@ from datetime import datetime
 
 router = APIRouter(prefix="/files", tags=["Files"])
 
-# Upload a file
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def upload_file(file: UploadFile):
+    """Upload a file with metadata handling and file locking."""
+
     if file.size > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
@@ -49,11 +50,15 @@ async def upload_file(file: UploadFile):
 # List all files
 @router.get("/")
 async def list_files():
+    """List all uploaded files with metadata."""
+
     return {"files": read_metadata()}
 
 # Download a file by file_id
 @router.get("/{file_id}")
 async def download_file(file_id: uuid.UUID):
+    """Download a file by its unique file_id."""
+    
     metadata = read_metadata()
 
     # Check if file_id exists in metadata
