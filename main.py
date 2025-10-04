@@ -52,7 +52,7 @@ async def upload_file(file: UploadFile):
     metadata = read_metadata()
     metadata.append({
         "file_id": file_id,
-        "filename": unique_filename,
+        "filename": file.filename,
         "upload_timestamp": datetime.now().isoformat(),
         "size_in_bytes": file.size
     })
@@ -60,15 +60,16 @@ async def upload_file(file: UploadFile):
 
     return {"file_id": file_id, "message": "File uploaded successfully!"}
 
+
+@app.get("/files/")
+async def list_files():
+    metadata = read_metadata()
+    return {"files": metadata}
+
 # TODO: Implement file download logic
 # @app.get("/files/{id}")
 # async def download_file():
 #     return {"message": "File downloaded successfully!"}
-
-# TODO: Implement file listing logic
-# @app.get("/files/")
-# async def list_files():
-#     return {"files": ["file1.txt", "file2.txt", "file3.txt"]}
 
 # Root endpoint with HTML form
 @app.get("/")
