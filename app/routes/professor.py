@@ -6,6 +6,7 @@ from app.config import MAX_FILE_SIZE
 router = APIRouter(prefix="/professor", tags=["Professor"])
 templates = Jinja2Templates(directory="app/templates")
 
+# Render professor upload page
 @router.get("/", response_class=HTMLResponse)
 async def professor_page(request: Request):
     return templates.TemplateResponse(

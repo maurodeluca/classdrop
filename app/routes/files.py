@@ -8,18 +8,21 @@ import uuid
 
 router = APIRouter(prefix="/files", tags=["Files"])
 
+# Upload a file
 @router.post("/", status_code=201)
 async def upload_file(file: UploadFile):
     return await save_uploaded_file(file)
 
+# List all files
 @router.get("/")
 async def list_files():
     return {"files": read_metadata()}
 
+# Download a file by file_id
 @router.get("/{file_id}")
 async def download_file(file_id: uuid.UUID):
     metadata = read_metadata()
-    
+
     # Check if file_id exists in metadata
     entry = next((m for m in metadata if m["file_id"] == str(file_id)), None)
     if not entry:
