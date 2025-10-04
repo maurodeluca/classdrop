@@ -67,9 +67,9 @@ async def download_file(file_id: uuid.UUID):
         raise HTTPException(status_code=404, detail="File not found in metadata")
 
     # Check if file exists on disk
-    _, ext = os.path.splitext(entry.filename)
+    _, ext = os.path.splitext(entry["filename"])
     path = os.path.join(UPLOAD_DIR, f"{file_id}{ext}")
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="File not found on disk")
 
-    return FileResponse(path=path, filename=entry.filename, media_type="application/octet-stream")
+    return FileResponse(path=path, filename=entry["filename"], media_type="application/octet-stream")
