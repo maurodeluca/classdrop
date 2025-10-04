@@ -1,5 +1,5 @@
 from fastapi import FastAPI, UploadFile, status, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 import os
 import uuid
 import json
@@ -40,7 +40,7 @@ async def upload_file(file: UploadFile):
     
     # Generate unique filename to avoid collisions
     _, ext = os.path.splitext(file.filename)
-    file_id = uuid.uuid4().hex
+    file_id = str(uuid.uuid4())
     unique_filename = f"{file_id}.{ext}" 
     file_location = os.path.join(UPLOAD_DIR, unique_filename)
     
@@ -60,16 +60,26 @@ async def upload_file(file: UploadFile):
 
     return {"file_id": file_id, "message": "File uploaded successfully!"}
 
-
+# List all uploaded files
 @app.get("/files/")
 async def list_files():
     metadata = read_metadata()
     return {"files": metadata}
 
-# TODO: Implement file download logic
-# @app.get("/files/{id}")
-# async def download_file():
-#     return {"message": "File downloaded successfully!"}
+# Download endpoint
+@app.get("/files/{file_id}")
+async def download_file(file_id: uuid.UUID):
+    metadata = read_metadata()
+    file_entry = next((item for item in metadata if item["file_id"] == str(file_id)), None)
+    if not file_entry:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found.")
+    
+    file_path = os.path.join(UPLOAD_DIR, f"{file_id}.{os.path.splitext(file_entry['filename'])[1]}")
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found on server.")
+    
+    return FileResponse(path=file_path, filename=file_entry["filename"], media_type='application/octet-stream')
+    
 
 # Root endpoint with HTML form
 @app.get("/")
