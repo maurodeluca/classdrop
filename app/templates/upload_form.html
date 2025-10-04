@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ClassDrop File Upload</title>
+</head>
+<body>
+    <h1>ClassDrop File Upload</h1>
+    <p>Welcome Professor X! Upload a single resource file below.</p>
+    <p>Maximum allowed file size: {{ max_file_size_mb }} MB</p>
+    
+    <form id="uploadForm" enctype="multipart/form-data" method="post">
+        <input name="file" type="file" required>
+        <input type="submit" value="Upload">
+    </form>
+    <p id="detail"></p>
+
+    <script>
+    document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        
+        // Clear previous messages
+        const detail = document.getElementById("detail");
+        detail.innerText = "";
+
+        const form = e.target;
+        const data = new FormData(form);
+
+        const res = await fetch("/files/", {
+            method: "POST",
+            body: data
+        });
+        const json = await res.json();
+
+        if (res.ok) {
+            document.getElementById("detail").style.color = "green";
+            document.getElementById("detail").innerText = "INFO: " + json.detail;
+        }
+        else {
+            document.getElementById("detail").style.color = "red";
+            document.getElementById("detail").innerText = "ERROR: " + json.detail;
+        }
+    });
+    </script>
+
+</body>
+</html>
