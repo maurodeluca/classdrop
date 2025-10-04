@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 from app.routes import files, student, professor
 from fastapi.staticfiles import StaticFiles
 
-app = FastAPI(title="ClassDrop API", description="API for Class File Sharing.")
+app = FastAPI(debug=True, title="ClassDrop API", description="API for Class File Sharing.")
 
 # Include routers
 app.include_router(files.router)
@@ -17,6 +17,6 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 @app.get("/")
 async def root():
     """Redirect root to /student page."""
-    
+
     return RedirectResponse(url="/student")
 

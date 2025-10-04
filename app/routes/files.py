@@ -1,7 +1,8 @@
 from fastapi import APIRouter, UploadFile, HTTPException, status
 from fastapi.responses import FileResponse
-from app.utils.metadata import read_metadata, write_metadata
+from app.utils.metadata import read_metadata, update_metadata
 from app.config import UPLOAD_DIR, MAX_FILE_SIZE, DANGEROUS_EXTENSIONS
+from app.models import FileMetadata
 import os
 import uuid
 from datetime import datetime
@@ -12,6 +13,7 @@ router = APIRouter(prefix="/files", tags=["Files"])
 async def upload_file(file: UploadFile):
     """Upload a file with metadata handling and file locking."""
 
+    # Check file size
     if file.size > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
@@ -36,40 +38,41 @@ async def upload_file(file: UploadFile):
         f.write(await file.read())
 
     # Update metadata
-    metadata = read_metadata()
-    metadata.append({
-        "file_id": file_id,
-        "filename": file.filename,
-        "upload_timestamp": datetime.now().isoformat(),
-        "size_in_bytes": file.size
-    })
-    write_metadata(metadata)
+    metadata_entry = FileMetadata(
+        file_id=file_id,
+        filename=file.filename,
+        upload_timestamp=datetime.now().isoformat(),
+        size_in_bytes=file.size
+    )
+    update_metadata(metadata_entry)
 
     return {"file_id": file_id, "detail": "File uploaded successfully!"}
 
 # List all files
-@router.get("/")
+@router.get("/", response_model=list[FileMetadata])
 async def list_files():
     """List all uploaded files with metadata."""
 
-    return {"files": read_metadata()}
+    raw_metadata = read_metadata()
+    files = [FileMetadata(**item) for item in raw_metadata]
+    return {"files": files}
 
 # Download a file by file_id
 @router.get("/{file_id}")
 async def download_file(file_id: uuid.UUID):
     """Download a file by its unique file_id."""
-    
+
     metadata = read_metadata()
 
     # Check if file_id exists in metadata
-    entry = next((m for m in metadata if m["file_id"] == str(file_id)), None)
+    entry = next((m for m in metadata if m.file_id == file_id), None)
     if not entry:
         raise HTTPException(status_code=404, detail="File not found in metadata")
 
     # Check if file exists on disk
-    _, ext = os.path.splitext(entry["filename"])
+    _, ext = os.path.splitext(entry.filename)
     path = os.path.join(UPLOAD_DIR, f"{file_id}{ext}")
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="File not found on disk")
 
-    return FileResponse(path=path, filename=entry["filename"], media_type="application/octet-stream")
+    return FileResponse(path=path, filename=entry.filename, media_type="application/octet-stream")
