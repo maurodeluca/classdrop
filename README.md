@@ -40,7 +40,7 @@ source venv/bin/activate
 
 On Windows:
 ```console
-venv\Scripts\activate.bat
+venv\Scripts\activate
 ````
 
 ### 4️⃣ Install Dependencies
@@ -66,3 +66,10 @@ The app interactive API documentation will be available at:
 - http://127.0.0.1:8000/docs (provided by Swagger UI)
 - or alternatively http://127.0.0.1:8000/redocs (provided by ReDoc)
 
+
+## ❤️ Made with Love
+This project was made with ❤️ by Mauro De Luca.
+
+Feel free to reach out with any questions or feedback
+
+📧 Email: [maurodeluca@live.ie](mailto:maurodeluca@live.ie) 
