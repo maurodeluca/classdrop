@@ -8,7 +8,8 @@
             try {
                 const response = await fetch('/files/');
                 if (!response.ok) {
-                    throw new Error(`Error: ${response.status}`);
+                    const errorData = await response.json();
+                    throw new Error(`${response.status} ${response.statusText} - ${errorData.detail}`);
                 }
                 const data = await response.json();
                 const files = data.files;
@@ -19,10 +20,22 @@
                 if (files.length > 0) {
                     files.forEach(file => {
                         const row = document.createElement('tr');
+
+                        // Format the upload timestamp
+                        const uploadDate = new Date(file.upload_timestamp);
+                        const formattedDate = uploadDate.toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                        });
+
                         row.innerHTML = `
                             <td>${file.filename}</td>
                             <td>${file.size_in_bytes.toFixed(2)}</td>
-                            <td>${file.upload_timestamp}</td>
+                            <td>${formattedDate}</td>
                             <td>
                                 <form action="/files/${file.file_id}" method="get">
                                     <button type="submit">Download</button>

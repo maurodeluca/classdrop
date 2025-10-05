@@ -56,7 +56,7 @@ pip install -r requirements.txt
 Start the FastAPI development server 🚀:
 
 ```console
-fastapi dev main.py
+fastapi dev
 ```
 
 The app is served, by default, at http://127.0.0.1:8000, on your local machine.
@@ -65,6 +65,28 @@ The app interactive API documentation will be available at:
 
 - http://127.0.0.1:8000/docs (provided by Swagger UI)
 - or alternatively http://127.0.0.1:8000/redocs (provided by ReDoc)
+
+### Pages
+
+#### **Student Page**
+- **URL**: `/student`
+- **Description**: This page allows students to view and download files shared by the professor.
+- **Features**:
+  - Displays a list of available files, including their names, sizes, and upload timestamps.
+  - Provides a "Download" button for each file.
+- **How It Works**:
+  - The page fetches the list of files from the `/files/` API endpoint.
+  - Files are displayed dynamically using JavaScript.
+
+#### **Professor Page**
+- **URL**: `/professor`
+- **Description**: This page allows the professor to upload and manage files.
+- **Features**:
+  - Provides a file upload form to add new files to the system.
+  - Displays a list of uploaded files with options to delete or update metadata.
+- **How It Works**:
+  - File uploads are sent to the `/files/` API endpoint using a POST request.
+  - The page dynamically updates the list of files after an upload.
 
 
 ## ❤️ Made with Love

@@ -1,85 +1,77 @@
-import os
-import json
-import uuid
-from datetime import datetime
-from filelock import FileLock, Timeout
-from functools import wraps
-from fastapi import UploadFile, HTTPException, status
-
-## TODO: Implement and use this service in the routes
-# THIS FILE iS A WORK IN PROGRESS AND NOT YET IN USED
+from app.repositories.metadata_repository import MetadataRepository
+from app.repositories.file_repository import FileRepository
+import app.exceptions as ex
 
 class FileService:
-    def __init__(self, upload_dir="uploads", metadata_file="metadata.json", max_size_mb=20):
-        self.upload_dir = upload_dir
-        self.metadata_file = metadata_file
-        self.max_size = max_size_mb * 1024 * 1024  # convert to bytes
-        self.lock_file = f"{metadata_file}.lock"
+    """Service for handling file operations and metadata management."""
 
-        os.makedirs(upload_dir, exist_ok=True)
-        if not os.path.exists(metadata_file):
-            with open(metadata_file, "w") as f:
-                f.write("[]")
+    def __init__(self, file_repo: FileRepository, metadata_repo: MetadataRepository, max_size_mb: float = 20):
+        self.max_size = max_size_mb * 1024 * 1024  # Convert MB to bytes
+        self.file_repo = file_repo
+        self.metadata_repo = metadata_repo
 
-    @staticmethod
-    def handle_file_errors(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except Timeout:
-                raise HTTPException(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="Server busy, please try again shortly."
-                )
-            except FileNotFoundError:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Requested file not found."
-                )
-            except json.JSONDecodeError:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Metadata corrupted. Please contact the administrator."
-                )
-            except Exception as e:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Unexpected server error: {str(e)}"
-                )
-        return wrapper
+    def save_uploaded_file(self, filename: str, content: bytes) -> str:
+        """
+        Save uploaded file and update metadata.       
+        Returns the file_id as a string.
+        """
 
-    def read_metadata(self):
-        with FileLock(self.lock_file, timeout=5):
-            with open(self.metadata_file, "r") as f:
-                return json.load(f)
+        # Validate file size
+        if self.is_file_size_above_max(len(content)):
+            raise ex.FileSizeExceededException(f"File exceeds {self.max_size // (1024 * 1024)} MB limit.")
+        
+        # Validate file extension
+        ext = self.file_repo.get_file_extension(filename)
+        if self.is_dangerous_extension(ext):
+            raise ex.DangerousFileExtensionException(f"File type '{ext}' is not allowed for security reasons.")
+        
+        file_id = self.metadata_repo.add_metadata(filename, len(content))
+        self.file_repo.write_file(file_id, ext, content)
 
-    def write_metadata(self, data):
-        with FileLock(self.lock_file, timeout=5):
-            with open(self.metadata_file, "w") as f:
-                json.dump(data, f, indent=4)
+        return str(file_id)
 
-    async def save_file(self, file: UploadFile):
-        if file.spool_max_size > self.max_size:
-            raise HTTPException(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                detail=f"File exceeds maximum size of {self.max_size} bytes."
-            )
+    def get_all_files_metadata(self) -> list:
+        """
+        Retrieve all file metadata entries.
+        Returns a list of metadata dictionaries.
+        """
 
-        _, ext = os.path.splitext(file.filename)
-        file_id = str(uuid.uuid4())
-        unique_filename = f"{file_id}{ext}"
-        file_path = os.path.join(self.upload_dir, unique_filename)
+        return self.metadata_repo.read_metadata()
 
-        with open(file_path, "wb") as f:
-            f.write(await file.read())
+    def fetch_downloadable_file_by_id(self, file_id: str) -> tuple[str, str]:
+        """
+        Fetch downloadable file by file_id, raises ValueError if not found.      
+        Returns a tuple of (file_path, filename).
+        """
 
-        metadata = self.read_metadata()
-        metadata.append({
-            "file_id": file_id,
-            "filename": file.filename,
-            "upload_timestamp": datetime.now().isoformat(),
-            "size_in_bytes": file.spool_max_size
-        })
-        self.write_metadata(metadata)
-        return {"file_id": file_id, "message": "File uploaded successfully!"}
+        # Check if file_id exists in metadata
+        if not (entry := self.metadata_repo.get_metadata_by_id(file_id)):
+            raise FileNotFoundError("File not found in metadata")
+        
+        # Check if file exists on disk
+        path = self.file_repo.get_file_path(file_id, entry["filename"])
+        if not self.file_repo.file_exists(path):
+            raise FileNotFoundError("File not found on disk")
+        
+        return path, entry["filename"]
+
+    def is_file_size_above_max(self, size: int) -> bool:
+        """
+        Check if file size exceeds the maximum allowed size.       
+        Returns True if size exceeds max_size, else False.
+        """
+
+        if size > self.max_size:
+            return True
+        return False
+
+    def is_dangerous_extension(self, ext: str) -> bool:
+        """
+        Check if the file extension is considered dangerous.     
+        Returns True if extension is dangerous, else False.
+        """
+
+        DANGEROUS_EXTENSIONS = {".exe", ".bat", ".cmd", ".sh", ".js", ".msi", ".com", ".scr", ".pif", ".cpl"}
+        if ext in DANGEROUS_EXTENSIONS:
+            return True
+        return False

@@ -1,43 +1,56 @@
 from fastapi.testclient import TestClient
-from main import app
-import pytest
+from app.main import app
+from app.services.file_service import FileService
+from app.repositories.file_repository import FileRepository
+from app.repositories.metadata_repository import MetadataRepository
+from app.dependencies import get_file_service  # the one used in Depends()
 import uuid
-import json
+import pytest
 
 client = TestClient(app)
 
 @pytest.mark.e2e
-def test_download_file_success(tmp_path, monkeypatch):
-    # Setup
+def test_download_file(tmp_path):
+    """E2E test: verifies that a file can be downloaded successfully using dependency injection."""
+
+    # --- Arrange ---
     upload_dir = tmp_path / "uploads"
     upload_dir.mkdir()
     metadata_file = tmp_path / "metadata.json"
     metadata_file.write_text("[]")
 
-    # Mock environment
-    monkeypatch.setattr("app.utils.metadata.METADATA_FILE", str(metadata_file))
-    monkeypatch.setattr("app.routes.files.UPLOAD_DIR", str(upload_dir))
+    # Build repositories and service (isolated for this test)
+    file_repo = FileRepository(upload_dir=str(upload_dir))
+    metadata_repo = MetadataRepository(metadata_file=str(metadata_file))
+    test_service = FileService(file_repo=file_repo, metadata_repo=metadata_repo)
 
-    # Create a test file and metadata entry
+    # Inject this service into FastAPI using dependency override
+    app.dependency_overrides[get_file_service] = lambda: test_service
+
+    # Create a fake file and metadata entry
     file_id = str(uuid.uuid4())
-    original_filename = "test_file.txt"
-    test_file_path = upload_dir / f"{file_id}.txt"
-    test_file_content = "This is a test file for download."
-    test_file_path.write_text(test_file_content)
+    filename = "test.txt"
+    content = "Hello from ClassDrop!"
+    file_path = upload_dir / f"{file_id}.txt"
+    file_path.write_text(content)
 
-    metadata_entry = {
-        "file_id": file_id,
-        "filename": original_filename,
-        "upload_timestamp": "2025-10-05T12:00:00",
-        "size_in_bytes": len(test_file_content),
-    }
-    metadata_file.write_text(json.dumps([metadata_entry]))
+    metadata_repo.write_metadata([
+        {
+            "file_id": file_id,
+            "filename": filename,
+            "upload_timestamp": "2025-10-05T10:00:00",
+            "size_in_bytes": len(content),
+        }
+    ])
 
-    # Act
+    # --- Act ---
     response = client.get(f"/files/{file_id}")
 
-    # Assert
+    # --- Assert ---
     assert response.status_code == 200
-    assert response.headers["content-type"] == "application/octet-stream"
-    assert response.headers["content-disposition"] == f'attachment; filename="{original_filename}"'
-    assert response.headers["content-length"] == str(len(test_file_content))
+    assert response.content == content.encode()
+    assert "attachment;" in response.headers["content-disposition"]
+    assert response.headers["content-disposition"].endswith(f'{filename}"')
+
+    # --- Cleanup ---
+    app.dependency_overrides.clear()

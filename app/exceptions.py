@@ -1,8 +1,7 @@
 import json
-from filelock import FileLock, Timeout
+from filelock import Timeout
 from fastapi import HTTPException, status
 from functools import wraps
-from app.config import METADATA_FILE
 
 def handle_file_errors(func):
     @wraps(func)
@@ -31,25 +30,15 @@ def handle_file_errors(func):
             )
     return wrapper
 
-@handle_file_errors
-def read_metadata() -> list:
-    """Read metadata from the JSON file with file locking."""
+class FileSizeExceededException(Exception):
+    """Exception raised when a file exceeds the maximum allowed size."""
+    def __init__(self, message: str = "File size exceeds the allowed limit."):
+        self.message = message
+        super().__init__(self.message)
 
-    with FileLock(f"{METADATA_FILE}.lock", timeout=5):
-        with open(METADATA_FILE, "r") as f:
-            return json.load(f)
 
-@handle_file_errors
-def write_metadata(metadata: list):
-    """Write metadata to the JSON file with file locking."""
-
-    with FileLock(f"{METADATA_FILE}.lock", timeout=5):
-        with open(METADATA_FILE, "w") as f:         
-            json.dump(metadata, f, indent=4)
-
-def update_metadata(new_entry: dict):
-    """Add a new entry to the metadata file."""
-
-    metadata = read_metadata()
-    metadata.append(new_entry)
-    write_metadata(metadata)
+class DangerousFileExtensionException(Exception):
+    """Exception raised when a file has a dangerous extension."""
+    def __init__(self, message: str = "File type is not allowed for security reasons."):
+        self.message = message
+        super().__init__(self.message)
