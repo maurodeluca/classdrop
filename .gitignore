@@ -1,3 +1,8 @@
+# Custom
+uploads/
+metadata.json
+metadata.json.lock
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
