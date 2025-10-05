@@ -42,3 +42,9 @@ class DangerousFileExtensionException(Exception):
     def __init__(self, message: str = "File type is not allowed for security reasons."):
         self.message = message
         super().__init__(self.message)
+
+class InvalidFilenameException(Exception):
+    """Exception raised when a filename is contains invalid characters."""
+    def __init__(self, message: str = "Filename contains invalid characters."):
+        self.message = message
+        super().__init__(self.message)

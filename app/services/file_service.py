@@ -1,6 +1,7 @@
 from app.repositories.metadata_repository import MetadataRepository
 from app.repositories.file_repository import FileRepository
 import app.exceptions as ex
+from pathvalidate import is_valid_filename
 
 class FileService:
     """Service for handling file operations and metadata management."""
@@ -15,6 +16,8 @@ class FileService:
         Save uploaded file and update metadata.       
         Returns the file_id as a string.
         """
+        if not is_valid_filename(filename):
+            raise ex.InvalidFilenameException("Filename contains invalid characters.")
 
         # Validate file size
         if self.is_file_size_above_max(len(content)):

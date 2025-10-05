@@ -5,7 +5,7 @@ from app.routes import files, student, professor
 from app.middleware import catch_exceptions_middleware  # Import the middleware
 import app.exceptions as ex
 
-app = FastAPI(debug=True, title="ClassDrop API", description="API for Class File Sharing.")
+app = FastAPI(title="ClassDrop API", description="API for Class File Sharing.")
 
 # Include routers
 app.include_router(files.router)
@@ -33,6 +33,13 @@ async def file_size_exceeded_exception_handler(request: Request, exc: ex.FileSiz
         content={"detail": exc.message},
     )
 
+@app.exception_handler(FileNotFoundError)
+async def file_not_found_exception_handler(request: Request, exc: FileNotFoundError):
+    return JSONResponse(
+        status_code=status.HTTP_404_NOT_FOUND,
+        content={"detail": str(exc)},
+    )
+
 @app.exception_handler(ex.DangerousFileExtensionException)
 async def dangerous_file_extension_exception_handler(request: Request, exc: ex.DangerousFileExtensionException):
     return JSONResponse(
@@ -40,9 +47,9 @@ async def dangerous_file_extension_exception_handler(request: Request, exc: ex.D
         content={"detail": exc.message},
     )
 
-@app.exception_handler(FileNotFoundError)
-async def file_not_found_exception_handler(request: Request, exc: FileNotFoundError):
+@app.exception_handler(ex.InvalidFilenameException)
+async def validation_exception_handler(request: Request, exc: ex.InvalidFilenameException):
     return JSONResponse(
-        status_code=status.HTTP_404_NOT_FOUND,
+        status_code=status.HTTP_400_BAD_REQUEST,
         content={"detail": str(exc)},
     )

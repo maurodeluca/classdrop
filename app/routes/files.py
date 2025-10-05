@@ -13,6 +13,7 @@ async def upload_file(file: UploadFile, fs: FileService = Depends(get_file_servi
 
     content = await file.read()
     file_id = fs.save_uploaded_file(filename=file.filename, content=content)
+    
     return {"file_id": file_id, "message": "File uploaded successfully!"}
 
 
@@ -28,12 +29,7 @@ async def list_files(fs: FileService = Depends(get_file_service)):
 async def download_file(file_id: UUID, fs: FileService = Depends(get_file_service)):
     """Download a file by its unique file_id."""
 
-    try:
-        path, filename = fs.fetch_downloadable_file_by_id(str(file_id))
-        return FileResponse(path, filename=filename, media_type="application/octet-stream")
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+    path, filename = fs.fetch_downloadable_file_by_id(str(file_id))
+    return FileResponse(path, filename=filename, media_type="application/octet-stream")
+
     
