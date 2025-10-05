@@ -89,6 +89,30 @@ The app interactive API documentation will be available at:
   - The page dynamically updates the list of files after an upload.
 
 
+### Tests
+
+#### Running the Tests
+
+1. *Run all tests:* To run all tests, use the following command:
+```console
+pytest
+```
+
+2. *Run Specific Tests:* 
+ - To run only unit tests:
+```console
+pytest -m unit
+```
+ - To run only e2e tests:
+ ```console
+pytest -m e2e
+ ```
+
+3. *View Test Coverage:* To check the test coverage:
+```console
+pytest --cov=app
+```
+
 ## ❤️ Made with Love
 This project was made with ❤️ by Mauro De Luca.
 
