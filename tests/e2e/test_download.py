@@ -74,10 +74,10 @@ def test_download_file_with_no_file_metadata(tmp_path):
     app.dependency_overrides[get_file_service] = lambda: test_service
 
     # Create a fake file
-    file_id = str(uuid.uuid4())
-    filename = "test.txt"
-    content = "Hello from ClassDrop!"
-    file_path = upload_dir / f"{file_id}.txt"
+    file_id = uuid.uuid4()
+    ext = "txt"
+    content = "Hello world!"
+    file_path = upload_dir / f"{file_id}.{ext}"
     file_path.write_text(content)
     
     # Note: No metadata entry created
