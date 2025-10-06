@@ -24,7 +24,7 @@ cd classdrop
 
 ### 2️⃣ Create a Virtual Environment
 
-It's recommend to use a virtual environmnet to keep dependencies isolated.
+It's recommend to use a virtual environment to keep dependencies isolated.
 
 ```console
 python -m venv venv
