@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime
 from filelock import FileLock
 from app.exceptions import handle_file_errors
+from typeguard import typechecked
 
 class MetadataRepository:
     """Repository for managing file metadata in the database."""
@@ -18,8 +19,9 @@ class MetadataRepository:
         if not os.path.exists(self.METADATA_FILE):
             with open(self.METADATA_FILE, "w") as f:
                 json.dump([], f)
-
+    
     @handle_file_errors
+    @typechecked
     def read_metadata(self) -> list:
         """
         Read metadata from the JSON file with file locking.
@@ -31,6 +33,7 @@ class MetadataRepository:
                 return json.load(f)
 
     @handle_file_errors
+    @typechecked
     def write_metadata(self, metadata: list):
         """Write metadata to the JSON file with file locking."""
 
@@ -38,6 +41,7 @@ class MetadataRepository:
             with open(self.METADATA_FILE, "w") as f:
                 json.dump(metadata, f, indent=4)
 
+    @typechecked
     def add_metadata(self, filename: str, file_size: int) -> uuid.UUID:
         """
         Add a new entry to the metadata file.
@@ -56,14 +60,16 @@ class MetadataRepository:
 
         return file_id
 
-    
-    def get_metadata_by_id(self, file_id: str) -> dict:
+    @typechecked
+    def get_metadata_by_id(self, file_id: uuid.UUID) -> dict:
         """
         Retrieve metadata entry by file_id.
         Returns the metadata dictionary if found, else None.
         """
+
         metadata = self.read_metadata()
         for entry in metadata:
             if entry["file_id"] == str(file_id):
                 return entry
-        return None
+        
+        raise ValueError(f"No metadata found for file_id: {file_id}")

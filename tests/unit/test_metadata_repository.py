@@ -7,6 +7,8 @@ from app.repositories.metadata_repository import MetadataRepository
 @pytest.mark.unit
 def test_initializes_metadata_file(tmp_path):
     """Ensures metadata.json is created on initialization if missing."""
+    
+    # Arrange
     metadata_file = tmp_path / "metadata.json"
 
     # Act
@@ -24,11 +26,17 @@ def test_initializes_metadata_file(tmp_path):
 @pytest.mark.unit
 def test_write_and_read_metadata(tmp_path):
     """Verifies that metadata can be written and read correctly."""
+    
+    # Arrange
     metadata_file = tmp_path / "metadata.json"
     repo = MetadataRepository(metadata_file=str(metadata_file))
 
     sample_metadata = [
-        {"file_id": "123", "filename": "a.txt", "upload_timestamp": "now", "size_in_bytes": 10}
+        {
+            "file_id": uuid.uuid4().hex,
+            "filename": "test.txt",
+            "upload_timestamp": datetime.now().isoformat(),
+            "size_in_bytes": 1024}
     ]
 
     # Act
@@ -41,15 +49,19 @@ def test_write_and_read_metadata(tmp_path):
 @pytest.mark.unit
 def test_add_metadata_creates_new_entry(tmp_path, monkeypatch):
     """Ensures add_metadata adds a new entry and returns a valid UUID."""
+
+    # Arrange
     metadata_file = tmp_path / "metadata.json"
     repo = MetadataRepository(metadata_file=str(metadata_file))
 
     # Mock uuid4 to return a known value
-    fake_uuid = uuid.UUID("12345678-1234-5678-1234-567812345678")
+    fake_uuid = uuid.uuid4()
     monkeypatch.setattr(uuid, "uuid4", lambda: fake_uuid)
 
     # Act
-    file_id = repo.add_metadata("file.txt", 1024)
+    filename = "test.txt"
+    file_size = 1024
+    file_id = repo.add_metadata(filename, 1024)
 
     # Assert
     assert file_id == fake_uuid
@@ -60,21 +72,22 @@ def test_add_metadata_creates_new_entry(tmp_path, monkeypatch):
     assert len(data) == 1
     entry = data[0]
     assert entry["file_id"] == str(fake_uuid)
-    assert entry["filename"] == "file.txt"
-    assert entry["size_in_bytes"] == 1024
+    assert entry["filename"] == filename
+    assert entry["size_in_bytes"] == file_size
     # Validate timestamp format
     datetime.fromisoformat(entry["upload_timestamp"])
 
 @pytest.mark.unit
 def test_get_metadata_by_id_returns_entry(tmp_path, monkeypatch):
     """Ensures get_metadata_by_id finds the correct entry."""
+
+    # Arrange
     metadata_file = tmp_path / "metadata.json"
     repo = MetadataRepository(metadata_file=str(metadata_file))
 
-    # Prepare test data
-    known_id = str(uuid.uuid4())
+    known_id = uuid.uuid4()
     sample_metadata = [
-        {"file_id": known_id, "filename": "pic.png", "upload_timestamp": "now", "size_in_bytes": 200}
+        {"file_id": str(known_id), "filename": "test.txt", "upload_timestamp": "now", "size_in_bytes": 200}
     ]
     repo.write_metadata(sample_metadata)
 
@@ -87,11 +100,13 @@ def test_get_metadata_by_id_returns_entry(tmp_path, monkeypatch):
 @pytest.mark.unit
 def test_get_metadata_by_id_returns_none_for_missing_id(tmp_path):
     """Ensures get_metadata_by_id returns None when no match found."""
+    
+    # Arrange
     metadata_file = tmp_path / "metadata.json"
     repo = MetadataRepository(metadata_file=str(metadata_file))
 
     repo.write_metadata([])
 
-    result = repo.get_metadata_by_id("nonexistent-id")
-
-    assert result is None
+    # Act & Assert
+    with pytest.raises(ValueError):
+        repo.get_metadata_by_id(uuid.uuid4())

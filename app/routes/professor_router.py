@@ -13,7 +13,7 @@ async def professor_page(request: Request, fs: FileService = Depends(get_file_se
     """Render the professor upload page with max file size info."""
     
     return templates.TemplateResponse(
-        "upload_form.html",
+        "professor_page.html",
         {
             "request": request,
             "max_file_size_mb": fs.max_size // (1024*1024)

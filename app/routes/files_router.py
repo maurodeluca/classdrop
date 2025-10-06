@@ -14,7 +14,7 @@ async def upload_file(file: UploadFile, fs: FileService = Depends(get_file_servi
     content = await file.read()
     file_id = fs.save_uploaded_file(filename=file.filename, content=content)
     
-    return {"file_id": file_id, "message": "File uploaded successfully!"}
+    return {"file_id": str(file_id), "message": "File uploaded successfully!"}
 
 
 # List all files
@@ -28,8 +28,8 @@ async def list_files(fs: FileService = Depends(get_file_service)):
 @router.get("/{file_id}")
 async def download_file(file_id: UUID, fs: FileService = Depends(get_file_service)):
     """Download a file by its unique file_id."""
-
-    path, filename = fs.fetch_downloadable_file_by_id(str(file_id))
+    
+    path, filename = fs.fetch_downloadable_file_by_id(file_id)
     return FileResponse(path, filename=filename, media_type="application/octet-stream")
 
     
