@@ -116,7 +116,7 @@ pytest --cov=app
 ```
 
 ## Author
-This project was developed by by Mauro De Luca.
+This project was developed by Mauro De Luca.
 
 Feel free to reach out with any questions or feedback
 
