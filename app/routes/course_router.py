@@ -2,14 +2,14 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-router = APIRouter(prefix="/student", tags=["Students"])
+router = APIRouter(prefix="/course", tags=["Course"])
 templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_class=HTMLResponse)
-async def student_page(request: Request):
-    """Render the student page."""
+async def course_page(request: Request):
+    """Render the course page."""
     
     return templates.TemplateResponse(
-        "student_files.html",
+        "course_page.html",
         {"request": request}
     )

@@ -68,11 +68,11 @@ The app interactive API documentation will be available at:
 
 ### Pages
 
-#### **Student Page**
-- **URL**: `/student`
+#### **Course Page**
+- **URL**: `/course`
 - **Description**: This page allows students to view and download files shared by the professor.
 - **Features**:
-  - Displays a list of available files, including their names, sizes, and upload timestamps.
+  - Displays a list of available resource files, including their names, sizes, and upload timestamps.
   - Provides a "Download" button for each file.
 - **How It Works**:
   - The page fetches the list of files from the `/files/` API endpoint.
