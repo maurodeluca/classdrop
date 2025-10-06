@@ -1,14 +1,14 @@
 from fastapi import FastAPI, status, Request
 from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from app.routes import course_router, files_routers, professor_router
+from app.routes import course_router, files_router, professor_router
 from app.middleware import catch_exceptions_middleware  # Import the middleware
 import app.exceptions as ex
 
 app = FastAPI(title="ClassDrop API", description="API for Class File Sharing.")
 
 # Include routers
-app.include_router(files_routers.router)
+app.include_router(files_router.router)
 app.include_router(course_router.router)
 app.include_router(professor_router.router)
 
