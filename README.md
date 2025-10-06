@@ -113,8 +113,8 @@ pytest -m e2e
 pytest --cov=app
 ```
 
-## ❤️ Made with Love
-This project was made with ❤️ by Mauro De Luca.
+## Author
+This project was developed by by Mauro De Luca.
 
 Feel free to reach out with any questions or feedback
 
