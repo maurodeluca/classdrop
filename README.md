@@ -10,7 +10,7 @@ A minimal, lightweight file sharing API service intended for a university profes
  - FastAPI
  - Uvicorn
 
-All dependencies are listed in `requirements.txt` — install them with:
+All dependencies are listed in `requirements.txt`. Install them with:
 ```console
 pip install -r requirements.txt
 ```
@@ -26,7 +26,7 @@ cd classdrop
 
 ### 2️⃣ Create a Virtual Environment
 
-It's recommend to use a virtual environmnet to keep dependencies isolated.
+It's recommend to use a virtual environment to keep dependencies isolated.
 
 ```console
 python -m venv venv
