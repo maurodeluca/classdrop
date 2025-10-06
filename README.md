@@ -2,6 +2,8 @@
 
 A minimal, lightweight file sharing API service intended for a university professor to share resource files with their students. Supports uploads and downloads, stores files on disk, and makes it easy to retrieve shared files via a simple HTTP endpoint.
 
+![Demo](./docs/tutorial.gif)
+
 ## Dependencies
  - Python 3.10+ (tested on 3.13.3)
  - pip 24+
