@@ -8,7 +8,7 @@ A minimal, lightweight file sharing API service intended for a university profes
  - FastAPI
  - Uvicorn
 
-All dependencies are listed in `requirements.txt` — install them with:
+All dependencies are listed in `requirements.txt`. Install them with:
 ```console
 pip install -r requirements.txt
 ```
